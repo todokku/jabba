@@ -36,9 +36,9 @@ type Upstream struct {
 }
 
 //ServerConfig stores global params
-var Live ServerConfig
+var Live chan ServerConfig = make(chan ServerConfig, 2)
 
-func parseFromFile() *ServerConfig {
+func parseFromFile() {
 	jsonFile, err := os.Open("babyjabba.json")
 	defer jsonFile.Close()
 	if err != nil {
@@ -47,8 +47,10 @@ func parseFromFile() *ServerConfig {
 		panic(msg)
 	}
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &Live)
+	var nonLive *ServerConfig = new(ServerConfig)
+	json.Unmarshal(byteValue, nonLive)
+	Live <- *nonLive
 	//todo tell me about more of the config, number of routes
-	log.Debug().Msgf("parsed server configuration with %d live routes", len(Live.Routes))
-	return &Live
+	log.Debug().Msgf("parsed server configuration with %d live routes", len(nonLive.Routes))
+
 }
